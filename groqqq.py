@@ -10,7 +10,8 @@ from langchain_core.messages import HumanMessage, SystemMessage,AIMessage
 # from langchain_core.memory import ConversationBufferMemory
 # from langchain.chains import ConversationChain
 # from langchain.memory import ConversationBufferMemory
-
+from models.output import OP
+from langchain_core.output_parsers import PydanticOutputParser
 import os
 
 load_dotenv()
@@ -18,6 +19,9 @@ load_dotenv()
 model= ChatGroq(
     model="llama-3.1-8b-instant"
 )
+# st_model=model.with_structured_output(OP)
+
+parser=PydanticOutputParser(pydantic_object=OP)
 # model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
 # api_key=os.getenv("API_KEY")
 
@@ -28,10 +32,14 @@ model= ChatGroq(
 # prompt=template.invoke({"std":8,"board":"CBSE"})
 chat_history=[]
 
-template=ChatPromptTemplate.from_messages([("system",TEACHER),
+template=ChatPromptTemplate.from_messages([("system",TEACHER+ "\n\nYou must respond only in valid JSON.\n{format_instructions}"),
 MessagesPlaceholder(variable_name="chat_history"),
 ("human","{input}"),
 ])
+
+prompt = template.partial(
+    format_instructions=parser.get_format_instructions()
+)
 # memory=ConversationBufferMemory()
 # chain=ConversationChain(llm=model,prompt=template,memory=memory)
 
@@ -39,7 +47,7 @@ MessagesPlaceholder(variable_name="chat_history"),
 # print(prompt)
 
 
-chain=template|model
+chain=prompt|model|parser
 
 n=0
 while True:
@@ -58,12 +66,15 @@ while True:
         "input":user
         }
     resp=chain.invoke(obj)
+    
     # resp=chain.predict(input=user,std="8",board="CBSE")
     
     chat_history.append(HumanMessage(content=user)) 
-    chat_history.append(AIMessage(content=resp.content))
+    
+    chat_history.append(AIMessage(content=resp.answer))
+    
     # chat_history.append(SystemMessage(content=template.invoke(obj)),HumanMessage(content=resp.content))
-    print(resp.content)
+    print(resp)
     
 #     prompt_value = chain.prompt.format_prompt(
 #     input=user,
