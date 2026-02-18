@@ -10,7 +10,7 @@ from langchain_core.messages import HumanMessage, SystemMessage,AIMessage
 # from langchain_core.memory import ConversationBufferMemory
 # from langchain.chains import ConversationChain
 # from langchain.memory import ConversationBufferMemory
-from models.output import OP
+from models.output import OutP
 from langchain_core.output_parsers import PydanticOutputParser
 import os
 
@@ -21,7 +21,7 @@ model= ChatGroq(
 )
 # st_model=model.with_structured_output(OP)
 
-parser=PydanticOutputParser(pydantic_object=OP)
+parser=PydanticOutputParser(pydantic_object=OutP)
 # model=ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
 # api_key=os.getenv("API_KEY")
 
